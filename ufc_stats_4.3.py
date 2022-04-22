@@ -18,6 +18,7 @@ import time
 
 import json
 
+import ufc_mods 
 
 PATH = "C:\Program Files (x86)\chromedriver.exe" #Directory of the Chromedriver
 serv = Service(PATH)
@@ -33,31 +34,13 @@ print(WEBSITE)
 print(web_title) 
 time.sleep(5)
 
-def find_country_elements():
-    """Returns a list of countries."""
-    # UFC website 'Filters' button appears only after page has been clicked on.
-    # Send 'Page Down' key to make the 'Filter' button appear.
-    body = driver.find_element(By.CSS_SELECTOR, 'body')
-    body.send_keys(Keys.DOWN)
-    
-    filter_button = WebDriverWait(driver, 10).until(    
-        EC.element_to_be_clickable((By.CLASS_NAME, 'e-button--small '))
-        )
-    
-    filter_button.click()
-    filters_country = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.CLASS_NAME, 'facets-widget-ufc_facets_links'))
-        ).find_elements(By.TAG_NAME, 'li')
-    
-    countries_text = [country.text for country in filters_country[1:]]
 
-    return countries_text
 
-    
-countries_text = find_country_elements() 
+countries_text = ufc_mods.find_country_elements(driver) 
 print(countries_text)
 countries_total_num = len(countries_text)
 print(f"{countries_total_num} countries found.")
+
 
 
 df_fighter_names = pd.DataFrame()
@@ -69,7 +52,6 @@ for country in countries_text:
     time.sleep(5)
 
     # Look for the 'Load More' button.
-    load_more_num = 0
     while True:
         try:
             load_more_button = WebDriverWait(driver, 5).until(
@@ -85,18 +67,19 @@ for country in countries_text:
             
             print(len(fighter_names_text))
             df_temp = pd.DataFrame({'FighterName': fighter_names_text, 'Country': country_list})
+            
             print(df_temp.shape)
             df_temp.drop_duplicates(subset=['FighterName'], inplace=True)
-            print(df_temp.shape)
-            print(df_temp)
             
-            # Get the link to the figher's UFC webpage.
-            fighter_page_link = driver.find_elements(By.CLASS_NAME, 'c-listing-athlete-flipcard__action')
-        
-            fighter_page_link_text = [link.find_element(By.TAG_NAME, 'a').get_attribute('href') for link in fighter_page_link]
+            # # Get the link to the figher's UFC webpage.
+            # # ValueError occurs when #links on page > #names on page            
+            fighter_page_link_text  = ufc_mods.find_page_links(driver, df_temp)
+            df_temp['AthletePageLink'] = fighter_page_link_text          
+            df_temp.reset_index(inplace=True, drop=True)
             
-            # ValueError occurs when #links on page > #names on page
-            df_temp['AthletePageLink'] = fighter_page_link_text
+            fighter_records_text = ufc_mods.find_record(driver, df_temp)
+            df_temp['FighterRecord'] = fighter_records_text
+            print(fighter_records_text)
             
             df_fighter_names = df_fighter_names.append(df_temp)  
             print(df_fighter_names)
@@ -108,7 +91,7 @@ for country in countries_text:
             print(f"{countries_loaded}/{countries_total_num} of countries loaded.")
             time.sleep(5)
             driver.back()
-            find_country_elements()             
+            ufc_mods.find_country_elements(driver)             
             break
         
         else:
