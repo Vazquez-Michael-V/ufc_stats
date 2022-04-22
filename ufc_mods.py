@@ -86,5 +86,32 @@ def find_record(driver, df_temp):
     
     return fighter_records_text
 
+
+df_fighter_names = pd.read_excel('active_fighters_by_country.xlsx')
+print(df_fighter_names)
+
+def delimit_record(df_fighter_names):
+    """Takes the fighters DataFrame as arguement.\n
+    (W-L-D) is split into 'Win', 'Loss', and 'Draw' columns.
+    """
+    df_fighter_names['FighterRecord'] = df_fighter_names['FighterRecord'].str.replace(' (W-L-D)', '', regex=False)
+    df_fighter_names['Wins'] = df_fighter_names['FighterRecord']
+    df_fighter_names[['Wins', 'Losses', 'Draws']] = df_fighter_names['Wins'].str.split('-', expand=True)
+    
+    numeric_cols = ['Wins', 'Losses', 'Draws']
+    for col in numeric_cols:        
+        df_fighter_names[col] = pd.to_numeric(df_fighter_names[col], errors='coerce').fillna(0).astype(int)
     
     
+    # with pd.ExcelWriter('active_fighters_by_country_with_records.xlsx') as writer:
+    # df_fighter_names.to_excel(writer, sheet_name='FighterRecords')
+    
+    
+    # print(df_fighter_names)
+    # print(df_fighter_names.info())
+
+    return df_fighter_names
+
+# df_fighter_names = delimit_record(df_fighter_names)
+
+# print(df_fighter_names)
