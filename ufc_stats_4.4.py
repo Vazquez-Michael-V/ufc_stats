@@ -62,11 +62,41 @@ for country in countries_text:
             fighter_names = driver.find_elements(By.CLASS_NAME, 'c-listing-athlete__name')
             
             # Names are duplicated.
-            fighter_names_text = [name.text for name in fighter_names]            
-            country_list = [country]*len(fighter_names_text)
+            fighter_names_text = [name.text for name in fighter_names]     
             
-            print(len(fighter_names_text))
-            df_temp = pd.DataFrame({'FighterName': fighter_names_text, 'Country': country_list})
+            # Some fighters may have the same name.
+            fighter_names_modify_dups = []
+            name_num = 0
+            for name in fighter_names_text:
+                if  fighter_names_text.count(name) > 2:
+                    # Should be easy to remove the "_num" after dropping duplicates.
+                    name_country = f"{name}_{name_num}"
+                    fighter_names_modify_dups.append(name_country)
+                    name_num+=1
+                else:
+                    fighter_names_modify_dups.append(name)
+            
+            fighter_names_modify_dups_evens = []
+            for name in fighter_names_modify_dups:
+                try:
+                    a = int(name[-1])
+                except ValueError:
+                    fighter_names_modify_dups_evens.append(name)
+                else:
+                    if a%2 == 0:
+                        fighter_names_modify_dups_evens.append(name)
+                    else:
+                        pass
+                    
+            print(fighter_names_modify_dups_evens)       
+            print(len(fighter_names_modify_dups_evens))
+            
+            
+            country_list = [country]*len(fighter_names_modify_dups_evens)
+            
+            # print(len(fighter_names_text))
+            # print(fighter_names_modify_dups)
+            df_temp = pd.DataFrame({'FighterName': fighter_names_modify_dups_evens, 'Country': country_list})
             
             print(df_temp.shape)
             df_temp.drop_duplicates(subset=['FighterName'], inplace=True)
@@ -74,12 +104,17 @@ for country in countries_text:
             # # Get the link to the figher's UFC webpage.
             # # ValueError occurs when #links on page > #names on page            
             fighter_page_link_text  = ufc_mods.find_page_links(driver, df_temp)
-            df_temp['AthletePageLink'] = fighter_page_link_text          
+            df_temp['AthletePageLink'] = fighter_page_link_text  
+
+            # print(df_temp.shape)
+            # df_temp.drop_duplicates(subset=['FighterName'], inplace=True)
+                        
             df_temp.reset_index(inplace=True, drop=True)
             
             fighter_records_text = ufc_mods.find_record(driver, df_temp)
             df_temp['FighterRecord'] = fighter_records_text
             print(fighter_records_text)
+                        
             
             df_fighter_names = df_fighter_names.append(df_temp)  
             print(df_fighter_names)
@@ -102,7 +137,7 @@ for country in countries_text:
 df_fighter_names.reset_index(inplace=True)
 df_fighter_names = ufc_mods.delimit_record(df_fighter_names)
 print(df_fighter_names)
-
+print(df_fighter_names.info())
 
 with pd.ExcelWriter('active_fighters_by_country.xlsx') as writer:
     df_fighter_names.to_excel(writer, sheet_name='FighterCountry')
