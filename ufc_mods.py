@@ -19,19 +19,6 @@ import time
 import json
 
 
-# PATH = "C:\Program Files (x86)\chromedriver.exe" #Directory of the Chromedriver
-# serv = Service(PATH)
-# driver = webdriver.Chrome(service=serv)
-
-# https://www.ufc.com/athletes/all
-# Filtering to status = 'Active' redirects to this link: https://www.ufc.com/athletes/all?filters%5B0%5D=status%3A23
-# WEBSITE = "https://www.ufc.com/athletes/all?filters%5B0%5D=status%3A23"
-# driver.get(WEBSITE)
-# driver.maximize_window()
-# web_title = driver.title
-# print(WEBSITE)
-# print(web_title) 
-# time.sleep(5)
 
 def find_country_elements(driver):
     """Returns a list of countries."""
@@ -60,24 +47,6 @@ def find_page_links(driver, df_temp):
     fighter_page_link = driver.find_elements(By.CLASS_NAME, 'c-listing-athlete-flipcard__action')
     fighter_page_link_text = [link.find_element(By.TAG_NAME, 'a').get_attribute('href') for link in fighter_page_link]
     
-    # index_len = len(df_temp.index.values)
-    # if len(fighter_page_link_text) > index_len:
-    #     # fighter_page_link_text = ['Length of values error.']*index_len
-    #     df_temp_2 = df_temp.copy()
-    #     df_temp_2 = df_temp_2.groupby(['FighterName']).count()
-    #     with pd.ExcelWriter('df_temp_2.xlsx') as writer:
-    #         df_temp_2.to_excel(writer)
-    #     print(df_temp_2)
-    #     print(len(fighter_page_link_text))
-
-    #     fighter_page_link_text = fighter_page_link_text[:-1]
-    #     print(len(fighter_page_link_text))
-        
-    # else:
-    #     pass
-    
-    # ValueError occurs when #links on page > #names on page
-    # df_temp['AthletePageLink'] = fighter_page_link_text  
     return fighter_page_link_text        
 
     
@@ -85,13 +54,6 @@ def find_record(driver, df_temp):
     """Finds fighters' records. Format (W-L-D)"""
     fighter_records = driver.find_elements(By.CLASS_NAME, 'c-listing-athlete__record')
     fighter_records_text = [record.text for record in fighter_records]
-
-    # index_len = len(df_temp.index.values)
-    # if len(fighter_records_text) > index_len:
-    #     fighter_records_text = ['(W-L-D)']*index_len
-        
-    # else:
-    #     pass    
     
     return fighter_records_text
 
@@ -109,15 +71,7 @@ def delimit_record(df_fighter_names):
     
     numeric_cols = ['Wins', 'Losses', 'Draws']
     for col in numeric_cols:        
-        df_fighter_names[col] = pd.to_numeric(df_fighter_names[col], errors='coerce').fillna(0).astype(int)
-    
-    
-    # with pd.ExcelWriter('active_fighters_by_country_with_records.xlsx') as writer:
-    # df_fighter_names.to_excel(writer, sheet_name='FighterRecords')
-    
-    
-    # print(df_fighter_names)
-    # print(df_fighter_names.info())
+        df_fighter_names[col] = pd.to_numeric(df_fighter_names[col], errors='coerce').fillna(0).astype(int)    
 
     return df_fighter_names
 
